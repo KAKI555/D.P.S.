@@ -42,21 +42,17 @@
 
     <script>
 const Groq = require('groq-sdk');
-const { createReadStream } = require('fs');
-const readline = require('readline');
 
 const groq = new Groq();
-const rl = readline.createInterface({
+const rl = require('readline').createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
 async function main() {
   try {
-    // Prompt user for input
     const prompt = await askQuestion("Enter your message: ");
 
-    // Create chat completion request
     const chatCompletion = await groq.chat.completions.create({
       "messages": [
         {
@@ -72,19 +68,18 @@ async function main() {
       "stop": null
     });
 
-    // Process response stream
     for await (const chunk of chatCompletion) {
+      console.log("Received chunk:", chunk);
       process.stdout.write(chunk.choices[0]?.delta?.content || '');
     }
 
   } catch (error) {
     console.error("Error:", error.message);
   } finally {
-    rl.close(); // Close readline interface
+    rl.close();
   }
 }
 
-// Function to ask a question and return a promise
 function askQuestion(question) {
   return new Promise((resolve, reject) => {
     rl.question(question, (answer) => {
@@ -93,8 +88,8 @@ function askQuestion(question) {
   });
 }
 
-// Run the main function
 main();
+
 
     </script>
 </body>
