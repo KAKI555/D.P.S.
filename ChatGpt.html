@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groq AI Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script> <!-- Axios for HTTP requests -->
+</head>
+<body>
+    <h1>Groq AI Chat Interface</h1>
+    <form id="chatForm">
+        <label for="prompt">Prompt:</label><br>
+        <textarea id="prompt" name="prompt" rows="4" cols="50"></textarea><br><br>
+        
+        <label for="model">Model:</label>
+        <select id="model" name="model">
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (A1)</option>
+            <option value="gemma-7b-it">gemma-7b-it (A2)</option>
+            <option value="llama3-70b-8192">llama3-70b-8192 (B1)</option>
+            <option value="llama3-8b-8192">llama3-8b-8192 (B2)</option>
+        </select><br><br>
+        
+        <label for="apiKey">API Key:</label><br>
+        <input type="text" id="apiKey" name="apiKey" required><br><br>
+        
+        <label for="maxTokens">Max Tokens:</label><br>
+        <input type="number" id="maxTokens" name="maxTokens" value="50" required><br><br>
+        
+        <label for="temperature">Temperature:</label><br>
+        <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="2" value="0.7" required><br><br>
+        
+        <label for="role">Role:</label>
+        <select id="role" name="role">
+            <option value="user">User</option>
+            <option value="assistant">Assistant</option>
+        </select><br><br>
+        
+        <button type="submit">Chat with Groq AI</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        const form = document.getElementById('chatForm');
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('model').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const maxTokens = parseInt(document.getElementById('maxTokens').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const role = document.getElementById('role').value;
+
+            try {
+                const response = await axios.post('https://api.groq.io/v1/query', {
+                    model: model,
+                    messages: [
+                        {
+                            role: role,
+                            content: prompt.replace(/"/g, "'")
+                        }
+                    ],
+                    max_tokens: maxTokens,
+                    temperature: temperature
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseData = response.data;
+                const output = responseData.choices[0].message.content;
+                const usage = responseData.usage.total_tokens;
+
+                const responseDiv = document.getElementById('response');
+                responseDiv.innerHTML = `<p><strong>Response:</strong> ${output}</p>
+                                         <p><strong>Total Tokens Used:</strong> ${usage}</p>`;
+
+            } catch (error) {
+                console.error('Error:', error);
+                const responseDiv = document.getElementById('response');
+                responseDiv.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
